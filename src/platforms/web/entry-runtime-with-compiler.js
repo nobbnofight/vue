@@ -17,6 +17,7 @@ const idToTemplate = cached(id => {
 const mount = Vue.prototype.$mount
 Vue.prototype.$mount = function (
   el?: string | Element,
+  // 非ssr情况下为 false，ssr 时候为 true
   hydrating?: boolean
 ): Component {
   // 获取 el 对象

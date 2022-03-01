@@ -5069,19 +5069,33 @@
     return modified
   }
 
+  // 此处不用 class 的原因是因为方便后续给 Vue 实例混入实例成员
   function Vue (options) {
     if (
       !(this instanceof Vue)
     ) {
       warn('Vue is a constructor and should be called with the `new` keyword');
     }
+    // 调用 _init 方法
     this._init(options);
   }
 
+  // 注册 vm 的 _init() 方法，初始化 vm
   initMixin(Vue);
+
+  // 注册 vm 的 $data/$props/$set/$delete/$watch
   stateMixin(Vue);
+
+  // 初始化事件相关方法
+  // $on/$once/$off/$emit
   eventsMixin(Vue);
+
+  // 初始化声明周期相关的混入方法
+  // _update/$forceUpdate/$destroy
   lifecycleMixin(Vue);
+
+  // 混入 render
+  // $nextTick/_render
   renderMixin(Vue);
 
   /*  */
@@ -5094,7 +5108,9 @@
       }
 
       // additional parameters
+      // 把数组中的第一个元素(plugin)去除
       var args = toArray(arguments, 1);
+      // 把this(Vue)插入第一个元素位置
       args.unshift(this);
       if (typeof plugin.install === 'function') {
         plugin.install.apply(plugin, args);
@@ -5213,6 +5229,8 @@
     /**
      * Create asset registration methods.
      */
+    // 遍历 ASSET_TYPES 数组，为 Vue 定义相应方法
+    // ASSET_TYPES 包括了 directive component filter
     ASSET_TYPES.forEach(function (type) {
       Vue[type] = function (
         id,
@@ -5227,11 +5245,14 @@
           }
           if (type === 'component' && isPlainObject(definition)) {
             definition.name = definition.name || id;
+            // 把组件配置转换为组件的构造函数
             definition = this.options._base.extend(definition);
           }
           if (type === 'directive' && typeof definition === 'function') {
             definition = { bind: definition, update: definition };
           }
+          // 全局注册，储存资源并赋值
+          // this.options['components']['comp'] = definition
           this.options[type + 's'][id] = definition;
           return definition
         }
@@ -5386,11 +5407,13 @@
         );
       };
     }
+    // 初始化 Vue.config 对象
     Object.defineProperty(Vue, 'config', configDef);
 
     // exposed util methods.
     // NOTE: these are not considered part of the public API - avoid relying on
     // them unless you are aware of the risk.
+    // 这些工具方法不视作全局API的一部分，除非你已经意识到某些风险，否则不要去依赖他们
     Vue.util = {
       warn: warn,
       extend: extend,
@@ -5398,16 +5421,20 @@
       defineReactive: defineReactive
     };
 
+    // 静态方法 set/delete/nextTick
     Vue.set = set;
     Vue.delete = del;
     Vue.nextTick = nextTick;
 
     // 2.6 explicit observable API
+    // 让一个对象可响应
     Vue.observable = function (obj) {
       observe(obj);
       return obj
     };
 
+    // 初始化 Vue.options 对象，并给其扩展
+    // components/directives/filters 用来保存全局的 组件，指令，过滤器
     Vue.options = Object.create(null);
     ASSET_TYPES.forEach(function (type) {
       Vue.options[type + 's'] = Object.create(null);
@@ -5417,14 +5444,23 @@
     // components with in Weex's multi-instance scenarios.
     Vue.options._base = Vue;
 
+    // 设置 keep-alive 组件
     extend(Vue.options.components, builtInComponents);
 
+    // 注册 Vue.use() 用来注册组件
     initUse(Vue);
+
+    // 注册 Vue.mixin() 实现混入
     initMixin$1(Vue);
+
+    // 注册 Vue.extend() 基于传入的 options 返回一个组件的构造函数
     initExtend(Vue);
+
+    // 注册 Vue.directive, Vue.component(), Vue.filter()
     initAssetRegisters(Vue);
   }
 
+  // 设置了 Vue 的静态方法
   initGlobalAPI(Vue);
 
   Object.defineProperty(Vue.prototype, '$isServer', {
@@ -9026,6 +9062,8 @@
   /*  */
 
   // install platform specific utils
+  // 判断是否是关键属性(表单元素的 input/checked/selected/muted)
+  // 如果是这些属性，设置 el.props 属性(属性不设置到标签上)
   Vue.config.mustUseProp = mustUseProp;
   Vue.config.isReservedTag = isReservedTag;
   Vue.config.isReservedAttr = isReservedAttr;
@@ -11887,6 +11925,7 @@
   var mount = Vue.prototype.$mount;
   Vue.prototype.$mount = function (
     el,
+    // 非ssr情况下为 false，ssr 时候为 true
     hydrating
   ) {
     // 获取 el 对象
