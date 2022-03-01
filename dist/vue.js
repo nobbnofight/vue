@@ -3492,9 +3492,11 @@
     // so that we get proper render context inside it.
     // args order: tag, data, children, normalizationType, alwaysNormalize
     // internal version is used by render functions compiled from templates
+    // 编译生成的 render 进行渲染的方法
     vm._c = function (a, b, c, d) { return createElement(vm, a, b, c, d, false); };
     // normalization is always applied for the public version, used in
     // user-written render functions.
+    // 对手写 render 函数进行渲染的方法
     vm.$createElement = function (a, b, c, d) { return createElement(vm, a, b, c, d, true); };
 
     // $attrs & $listeners are exposed for easier HOC creation.
@@ -3761,8 +3763,10 @@
     vm._events = Object.create(null);
     vm._hasHookEvent = false;
     // init parent attached events
+    // 获取父元素上附加的事件
     var listeners = vm.$options._parentListeners;
     if (listeners) {
+      // 注册自定义事件
       updateComponentListeners(vm, listeners);
     }
   }
@@ -4696,6 +4700,8 @@
 
   function initData (vm) {
     var data = vm.$options.data;
+    // 初始化 _data，组件中 data 是函数，调用函数返回结果
+    // 否则直接返回 data
     data = vm._data = typeof data === 'function'
       ? getData(data, vm)
       : data || {};
@@ -4708,10 +4714,13 @@
       );
     }
     // proxy data on instance
+    // 获取 data 中的所有属性
     var keys = Object.keys(data);
+    // 获取 props / methods
     var props = vm.$options.props;
     var methods = vm.$options.methods;
     var i = keys.length;
+    // 判断 data 上的成员是否和 props/methods 重名
     while (i--) {
       var key = keys[i];
       {
@@ -4733,6 +4742,7 @@
       }
     }
     // observe data
+    // 响应式处理
     observe(data, true /* asRootData */);
   }
 
@@ -4957,6 +4967,8 @@
   var uid$2 = 0;
 
   function initMixin (Vue) {
+    // 给 Vue 实例增加 _init() 方法
+    // 合并 options 初始化操作
     Vue.prototype._init = function (options) {
       var vm = this;
       // a uid
@@ -4971,8 +4983,10 @@
       }
 
       // a flag to avoid this being observed
+      // 如果是 Vue 实例不需要被 observe
       vm._isVue = true;
       // merge options
+      // 合并 options
       if (options && options._isComponent) {
         // optimize internal component instantiation
         // since dynamic options merging is pretty slow, and none of the
@@ -4991,13 +5005,23 @@
       }
       // expose real self
       vm._self = vm;
+      // vm 的生命周期相关变量初始化
+      // $children/$parent/$root/$refs
       initLifecycle(vm);
+      // vm 的事件监听初始化，父组件绑定在当前组件上的事件
       initEvents(vm);
+      // vm 的编译render初始化
+      // $slots/$scopedSlots/_c/$createElement/$attrs/$listeners
       initRender(vm);
+      // beforeCreate 生命钩子的回调
       callHook(vm, 'beforeCreate');
+      // 把 inject 的成员注入到 vm 上
       initInjections(vm); // resolve injections before data/props
+      // 初始化 vm 的 _props/methods/_data/computed/watch
       initState(vm);
+      // 初始化 provide
       initProvide(vm); // resolve provide after data/props
+      // created 生命钩子的回调
       callHook(vm, 'created');
 
       /* istanbul ignore if */
