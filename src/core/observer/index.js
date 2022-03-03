@@ -229,16 +229,22 @@ export function set (target: Array<any> | Object, key: any, val: any): any {
   ) {
     warn(`Cannot set reactive property on undefined, null, or primitive value: ${(target: any)}`)
   }
+  // 判断 taget 是否是数组，key 是否是合法的索引
   if (Array.isArray(target) && isValidArrayIndex(key)) {
     target.length = Math.max(target.length, key)
+    // 通过 splice 对 key 位置的元素进行替换
+    // splice 在 array.js 进行了响应式处理
     target.splice(key, 1, val)
     return val
   }
+  // 如果 key 在对象中已经存在 直接赋值
   if (key in target && !(key in Object.prototype)) {
     target[key] = val
     return val
   }
+  // 获取 target 中的 observer 对象
   const ob = (target: any).__ob__
+  // 如果 target 是 vue 实例或者 $data 直接返回
   if (target._isVue || (ob && ob.vmCount)) {
     process.env.NODE_ENV !== 'production' && warn(
       'Avoid adding reactive properties to a Vue instance or its root $data ' +
@@ -264,11 +270,16 @@ export function del (target: Array<any> | Object, key: any) {
   ) {
     warn(`Cannot delete reactive property on undefined, null, or primitive value: ${(target: any)}`)
   }
+  // 判断是否是素组，key 是否合法
   if (Array.isArray(target) && isValidArrayIndex(key)) {
+    // 如果是数组通过 splice 删除
+    // splice 做过响应式处理
     target.splice(key, 1)
     return
   }
+  // 获取 target 的 ob 对象
   const ob = (target: any).__ob__
+  // 如果 target 是 Vue 实例或者 $data 对象，直接返回
   if (target._isVue || (ob && ob.vmCount)) {
     process.env.NODE_ENV !== 'production' && warn(
       'Avoid deleting properties on a Vue instance or its root $data ' +
@@ -276,13 +287,16 @@ export function del (target: Array<any> | Object, key: any) {
     )
     return
   }
+  // 如果 target 对象没有 key 属性直接返回
   if (!hasOwn(target, key)) {
     return
   }
+  // 删除属性
   delete target[key]
   if (!ob) {
     return
   }
+  // 通过 ob 发送通知
   ob.dep.notify()
 }
 
